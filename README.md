@@ -15,13 +15,6 @@ We need `python3.5` or `python3.6` to run this package.
 
 ## Setup
 
-### Installation
-
-#### Install font
-```bash
-sudo apt-get install fonts-takao-mincho fonts-takao-gothic fonts-takao-pgothic
-```
-
 ### Workspace build
 
 #### Workspace build (Kinetic)
