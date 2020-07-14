@@ -2,6 +2,8 @@
 [![GitHub version](https://badge.fury.io/gh/knorth55%2Feasyocr_ros.svg)](https://badge.fury.io/gh/knorth55%2Feasyocr_ros)
 [![Build Status](https://travis-ci.com/knorth55/easyocr_ros.svg?branch=master)](https://travis-ci.com/knorth55/easyocr_ros)
 
+![sample](./.readme/sample.png)
+
 ## Environment
 
 - Ubuntu 16.04 + Kinetic
