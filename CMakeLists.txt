@@ -14,11 +14,11 @@ catkin_generate_virtualenv(
   ISOLATE_REQUIREMENTS FALSE
 )
 
-# file(GLOB NODE_SCRIPTS_FILES node_scripts/*)
-# catkin_install_python(
-#   PROGRAMS ${NODE_SCRIPTS_FILES}
-#   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
-# )
+file(GLOB NODE_SCRIPTS_FILES node_scripts/*)
+catkin_install_python(
+  PROGRAMS ${NODE_SCRIPTS_FILES}
+  DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
+)
 
 install(
   DIRECTORY launch

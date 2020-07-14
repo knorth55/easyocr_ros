@@ -1,0 +1,8 @@
+<launch>
+  <arg name="INPUT_IMAGE" />
+
+  <node name="easyocr_node" pkg="easyocr_ros" type="easyocr_node.py"
+        output="screen">
+    <remap from="~input" to="$(arg INPUT_IMAGE)" />
+  </node>
+</launch>
