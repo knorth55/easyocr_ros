@@ -26,7 +26,8 @@ class EasyOCRNode(ConnectionBasedTransport):
         self.languages = rospy.get_param(
             '~languages', ['ja', 'en'])
         self.bridge = CvBridge()
-        self.reader = easyocr.Reader(self.languages)
+        gpu = rospy.get_param('~gpu', False)
+        self.reader = easyocr.Reader(self.languages, gpu=gpu)
 
         self.pub_rects = self.advertise(
             '~output/rects', RectArray, queue_size=1)
@@ -48,9 +49,10 @@ class EasyOCRNode(ConnectionBasedTransport):
 
     def image_cb(self, msg):
         img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='rgb8')
-        H, W = img.shape[:2]
         # RGB -> BGR
+        rospy.logdebug('start readtext')
         results = self.reader.readtext(img[:, :, ::-1])
+        rospy.logdebug('end readtext')
 
         bboxes = []
         scores = []
@@ -78,7 +80,7 @@ class EasyOCRNode(ConnectionBasedTransport):
             header=msg.header,
             classifier=self.classifier_name,
             target_names=texts,
-            labels=np.aragen(len(texts)),
+            labels=np.arange(len(texts)),
             label_names=texts,
             label_proba=scores)
 

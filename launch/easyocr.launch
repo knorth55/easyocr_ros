@@ -1,8 +1,12 @@
 <launch>
   <arg name="INPUT_IMAGE" />
+  <arg name="GPU" default="false" />
 
   <node name="easyocr_node" pkg="easyocr_ros" type="easyocr_node.py"
         output="screen">
     <remap from="~input" to="$(arg INPUT_IMAGE)" />
+    <rosparam subst_value="true">
+      gpu: $(arg GPU)
+    </rosparam>
   </node>
 </launch>
