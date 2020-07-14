@@ -1,10 +1,12 @@
 #!/usr/bin/env python
+# -*- coding: utf-8 -*-
 
 import matplotlib
 matplotlib.use("Agg")  # NOQA
+matplotlib.rc('font', family='TakaoPGothic')  # NOQA
 import matplotlib.pyplot as plt
 
-from chainercv.visualizations import vis_bbox
+from chainercv.visualizations.vis_image import vis_image
 from cv_bridge import CvBridge
 import easyocr
 import numpy as np
@@ -16,6 +18,67 @@ from jsk_recognition_msgs.msg import ClassificationResult
 from jsk_recognition_msgs.msg import Rect
 from jsk_recognition_msgs.msg import RectArray
 from sensor_msgs.msg import Image
+
+
+def vis_bbox(img, bbox, label=None, score=None, label_names=None,
+             instance_colors=None, alpha=1., linewidth=3.,
+             sort_by_score=True, ax=None):
+    from matplotlib import pyplot as plt
+
+    if label is not None and not len(bbox) == len(label):
+        raise ValueError('The length of label must be same as that of bbox')
+    if score is not None and not len(bbox) == len(score):
+        raise ValueError('The length of score must be same as that of bbox')
+
+    if sort_by_score and score is not None:
+        order = np.argsort(score)
+        bbox = bbox[order]
+        score = score[order]
+        if label is not None:
+            label = label[order]
+        if instance_colors is not None:
+            instance_colors = np.array(instance_colors)[order]
+
+    # Returns newly instantiated matplotlib.axes.Axes object if ax is None
+    ax = vis_image(img, ax=ax)
+
+    # If there is no bounding box to display, visualize the image and exit.
+    if len(bbox) == 0:
+        return ax
+
+    if instance_colors is None:
+        # Red
+        instance_colors = np.zeros((len(bbox), 3), dtype=np.float32)
+        instance_colors[:, 0] = 255
+    instance_colors = np.array(instance_colors)
+
+    for i, bb in enumerate(bbox):
+        xy = (bb[1], bb[0])
+        height = bb[2] - bb[0]
+        width = bb[3] - bb[1]
+        color = instance_colors[i % len(instance_colors)] / 255
+        ax.add_patch(plt.Rectangle(
+            xy, width, height, fill=False,
+            edgecolor=color, linewidth=linewidth, alpha=alpha))
+
+        caption = []
+
+        if label is not None and label_names is not None:
+            lb = label[i]
+            if not (0 <= lb < len(label_names)):
+                raise ValueError('No corresponding name is given')
+            caption.append(label_names[lb])
+        if score is not None:
+            sc = score[i]
+            caption.append(u"{:.2f}".format(sc))
+
+        if len(caption) > 0:
+            ax.text(bb[1], bb[0],
+                    u": ".join(caption),
+                    style='italic',
+                    bbox={'facecolor': 'white', 'alpha': 0.7, },
+                    fontsize=5)
+    return ax
 
 
 class EasyOCRNode(ConnectionBasedTransport):
