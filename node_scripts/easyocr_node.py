@@ -3,7 +3,6 @@
 
 import matplotlib
 matplotlib.use("Agg")  # NOQA
-matplotlib.rc('font', family='TakaoPGothic')  # NOQA
 import matplotlib.pyplot as plt
 
 from chainercv.visualizations.vis_image import vis_image
@@ -87,7 +86,7 @@ class EasyOCRNode(ConnectionBasedTransport):
         self.classifier_name = rospy.get_param(
             '~classifier_name', rospy.get_name())
         self.languages = rospy.get_param(
-            '~languages', ['ja', 'en'])
+            '~languages', ['en'])
         self.bridge = CvBridge()
         gpu = rospy.get_param('~gpu', False)
         self.reader = easyocr.Reader(self.languages, gpu=gpu)
