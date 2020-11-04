@@ -1,6 +1,6 @@
 # easyocr_ros
 [![GitHub version](https://badge.fury.io/gh/knorth55%2Feasyocr_ros.svg)](https://badge.fury.io/gh/knorth55%2Feasyocr_ros)
-[![Build Status](https://travis-ci.com/knorth55/easyocr_ros.svg?branch=master)](https://travis-ci.com/knorth55/easyocr_ros)
+[![GitHub Workflow Status (branch)](https://img.shields.io/github/workflow/status/knorth55/easyocr_ros/CI/master)](https://github.com/knorth55/easyocr_ros/actions)
 
 ![sample](./.readme/sample.png)
 
