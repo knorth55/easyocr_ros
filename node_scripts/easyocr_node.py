@@ -133,7 +133,7 @@ class EasyOCRNode(ConnectionBasedTransport):
             scores.append(score)
             rect = Rect(
                 x=x_min, y=y_min,
-                width=x_max-x_min, height=y_max-y_min)
+                width=x_max - x_min, height=y_max - y_min)
             rect_msg.rects.append(rect)
         bboxes = np.array(bboxes)
         scores = np.array(scores)
