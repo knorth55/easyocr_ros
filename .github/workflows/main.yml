@@ -26,13 +26,11 @@ jobs:
           - ROS_DISTRO: melodic
             ROS_REPO: testing
             UPSTREAM_WORKSPACE: '.ci.rosinstall.melodic'
-            UPSTREAM_CMAKE_ARGS: '-DPYTHON_EXECUTABLE=/usr/bin/python3 -DPYTHON_INCLUDE_DIR=/usr/include/python3.6m -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.6m.so'
             ADDITIONAL_DEBS: 'python3-catkin-pkg-modules python3-rospkg-modules python3-opencv python3-venv python3-empy python-catkin-tools'
             NOT_TEST_BUILD: true
           - ROS_DISTRO: melodic
             ROS_REPO: main
             UPSTREAM_WORKSPACE: '.ci.rosinstall.melodic'
-            UPSTREAM_CMAKE_ARGS: '-DPYTHON_EXECUTABLE=/usr/bin/python3 -DPYTHON_INCLUDE_DIR=/usr/include/python3.6m -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.6m.so'
             ADDITIONAL_DEBS: 'python3-catkin-pkg-modules python3-rospkg-modules python3-opencv python3-venv python3-empy python-catkin-tools'
             NOT_TEST_BUILD: true
           - ROS_DISTRO: noetic
