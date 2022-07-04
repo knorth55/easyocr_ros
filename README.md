@@ -7,16 +7,48 @@
 
 ## Environment
 
-- Ubuntu 16.04 + Kinetic
+- Ubuntu 20.04 + Noetic
 - Ubuntu 18.04 + Melodic
+- Ubuntu 16.04 + Kinetic
 
 ## Notice
 
-We need `python3.5` or `python3.6` to run this package.
+We need `python3.5` and above to run this package.
 
 ## Setup
 
 ### Workspace build
+
+#### Workspace build (Noetic)
+
+```bash
+source /opt/ros/noetic/setup.bash
+mkdir -p ~/easyocr_ws/src
+cd ~/easyocr_ws/src
+git clone https://github.com/knorth55/easyocr_ros.git
+wstool init
+wstool merge easyocr_ros/fc.rosinstall
+wstool update
+rosdep install --from-paths . --ignore-src -y -r
+cd ~/easyocr_ws
+catkin build
+```
+
+#### Workspace build (Melodic)
+
+```bash
+sudo apt install python3-opencv
+source /opt/ros/melodic/setup.bash
+mkdir -p ~/easyocr_ws/src
+cd ~/easyocr_ws/src
+git clone https://github.com/knorth55/easyocr_ros.git
+wstool init
+wstool merge easyocr_ros/fc.rosinstall
+wstool update
+rosdep install --from-paths . --ignore-src -y -r
+cd ~/easyocr_ws
+catkin build
+```
 
 #### Workspace build (Kinetic)
 
@@ -34,21 +66,5 @@ rosdep install --from-paths . --ignore-src -y -r
 cd ~/easyocr_ws
 catkin init
 catkin config -DPYTHON_EXECUTABLE=/usr/bin/python3 -DPYTHON_INCLUDE_DIR=/usr/include/python3.5m -DPYTHON_LIBRARY=/usr/lib/x86_64-linux-gnu/libpython3.5m.so
-catkin build
-```
-
-#### Workspace build (Melodic)
-
-```bash
-sudo apt-get install python3-opencv
-source /opt/ros/melodic/setup.bash
-mkdir -p ~/easyocr_ws/src
-cd ~/easyocr_ws/src
-git clone https://github.com/knorth55/easyocr_ros.git
-wstool init
-wstool merge easyocr_ros/fc.rosinstall
-wstool update
-rosdep install --from-paths . --ignore-src -y -r
-cd ~/easyocr_ws
 catkin build
 ```
