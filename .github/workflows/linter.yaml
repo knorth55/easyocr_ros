@@ -9,12 +9,28 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.8
+      - name: Install dependencies
+        run: |
+          pip install wheel -U
+          pip install flake8==3.8.4 hacking==4.1.0 -U
+      - name: Lint with hacking
+        run: |
+          flake8 . --ignore=E402,W503,H102
       - name: Run Super-Linter
-        uses: github/super-linter@v3
+        uses: github/super-linter@v4.8.5
         env:
           DEFAULT_BRANCH: main
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          VALIDATE_BASH: false
+          VALIDATE_DOCKERFILE: false
+          VALIDATE_DOCKERFILE_HADOLINT: false
           VALIDATE_PYTHON_BLACK: false
           VALIDATE_PYTHON_ISORT: false
+          VALIDATE_PYTHON_MYPY: false
           VALIDATE_PYTHON_PYLINT: false
           VALIDATE_JSCPD: false
+          VALIDATE_NATURAL_LANGUAGE: false

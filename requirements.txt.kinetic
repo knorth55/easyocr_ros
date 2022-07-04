@@ -1,0 +1,29 @@
+chainer==7.7.0            # via chainercv
+chainercv==0.13.1         # via -r requirements.in
+cycler==0.10.0            # via matplotlib
+decorator==5.1.1          # via networkx
+easyocr==1.5.0            # via -r requirements.in
+filelock==3.2.1           # via chainer
+future==0.18.2            # via torch
+imageio==2.9.0            # via -r requirements.in, scikit-image
+kiwisolver==1.1.0         # via matplotlib
+matplotlib==3.0.3         # via scikit-image
+networkx==2.4             # via scikit-image
+numpy==1.18.5             # via -r requirements.in, chainer, easyocr, imageio, matplotlib, opencv-python-headless, pywavelets, scipy, torch, torchvision
+opencv-python-headless==4.4.0.42  # via easyocr
+pillow==7.2.0             # via -r requirements.in, chainercv, easyocr, imageio, scikit-image, torchvision
+protobuf==3.19.4          # via chainer
+pyparsing==2.4.7          # via matplotlib
+python-bidi==0.4.2        # via easyocr
+python-dateutil==2.8.2    # via matplotlib
+pywavelets==1.1.1         # via scikit-image
+pyyaml==5.3.1             # via easyocr
+scikit-image==0.15.0      # via easyocr
+scipy==1.4.1              # via easyocr, scikit-image
+six==1.16.0               # via chainer, cycler, python-bidi, python-dateutil
+torch==1.5.1              # via easyocr, torchvision
+torchvision==0.6.1        # via easyocr
+typing-extensions==3.10.0.2  # via chainer
+
+# The following packages are considered to be unsafe in a requirements file:
+# setuptools
