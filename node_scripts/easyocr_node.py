@@ -1,15 +1,49 @@
 #!/usr/bin/env python
 # -*- coding: utf-8 -*-
 
-import matplotlib
-matplotlib.use("Agg")  # NOQA
-import matplotlib.pyplot as plt
-
-from chainercv.visualizations.vis_image import vis_image
-from cv_bridge import CvBridge
+import copy
 import easyocr
+import matplotlib
+import matplotlib.cm
 import numpy as np
+import os
 import rospy
+import sys
+import threading
+
+# OpenCV import for python3
+if os.environ['ROS_PYTHON_VERSION'] == '3':
+    import cv2
+else:
+    sys.path.remove('/opt/ros/{}/lib/python2.7/dist-packages'.format(os.getenv('ROS_DISTRO')))  # NOQA
+    import cv2  # NOQA
+    sys.path.append('/opt/ros/{}/lib/python2.7/dist-packages'.format(os.getenv('ROS_DISTRO')))  # NOQA
+
+# cv_bridge_python3 import
+if os.environ['ROS_PYTHON_VERSION'] == '3':
+    from cv_bridge import CvBridge
+else:
+    ws_python3_paths = [p for p in sys.path if 'devel/lib/python3' in p]
+    if len(ws_python3_paths) == 0:
+        # search cv_bridge in workspace and append
+        ws_python2_paths = [
+            p for p in sys.path if 'devel/lib/python2.7' in p]
+        for ws_python2_path in ws_python2_paths:
+            ws_python3_path = ws_python2_path.replace('python2.7', 'python3')
+            if os.path.exists(os.path.join(ws_python3_path, 'cv_bridge')):
+                ws_python3_paths.append(ws_python3_path)
+        if len(ws_python3_paths) == 0:
+            opt_python3_path = '/opt/ros/{}/lib/python3/dist-packages'.format(
+                os.getenv('ROS_DISTRO'))
+            sys.path = [opt_python3_path] + sys.path
+            from cv_bridge import CvBridge
+            sys.path.remove(opt_python3_path)
+        else:
+            sys.path = [ws_python3_paths[0]] + sys.path
+            from cv_bridge import CvBridge
+            sys.path.remove(ws_python3_paths[0])
+    else:
+        from cv_bridge import CvBridge
 
 from jsk_topic_tools import ConnectionBasedTransport
 
@@ -19,67 +53,6 @@ from jsk_recognition_msgs.msg import RectArray
 from sensor_msgs.msg import Image
 
 
-def vis_bbox(img, bbox, label=None, score=None, label_names=None,
-             instance_colors=None, alpha=1., linewidth=3.,
-             sort_by_score=True, ax=None):
-    from matplotlib import pyplot as plt
-
-    if label is not None and not len(bbox) == len(label):
-        raise ValueError('The length of label must be same as that of bbox')
-    if score is not None and not len(bbox) == len(score):
-        raise ValueError('The length of score must be same as that of bbox')
-
-    if sort_by_score and score is not None:
-        order = np.argsort(score)
-        bbox = bbox[order]
-        score = score[order]
-        if label is not None:
-            label = label[order]
-        if instance_colors is not None:
-            instance_colors = np.array(instance_colors)[order]
-
-    # Returns newly instantiated matplotlib.axes.Axes object if ax is None
-    ax = vis_image(img, ax=ax)
-
-    # If there is no bounding box to display, visualize the image and exit.
-    if len(bbox) == 0:
-        return ax
-
-    if instance_colors is None:
-        # Red
-        instance_colors = np.zeros((len(bbox), 3), dtype=np.float32)
-        instance_colors[:, 0] = 255
-    instance_colors = np.array(instance_colors)
-
-    for i, bb in enumerate(bbox):
-        xy = (bb[1], bb[0])
-        height = bb[2] - bb[0]
-        width = bb[3] - bb[1]
-        color = instance_colors[i % len(instance_colors)] / 255
-        ax.add_patch(plt.Rectangle(
-            xy, width, height, fill=False,
-            edgecolor=color, linewidth=linewidth, alpha=alpha))
-
-        caption = []
-
-        if label is not None and label_names is not None:
-            lb = label[i]
-            if not (0 <= lb < len(label_names)):
-                raise ValueError('No corresponding name is given')
-            caption.append(label_names[lb])
-        if score is not None:
-            sc = score[i]
-            caption.append(u"{:.2f}".format(sc))
-
-        if len(caption) > 0:
-            ax.text(bb[1], bb[0],
-                    u": ".join(caption),
-                    style='italic',
-                    bbox={'facecolor': 'white', 'alpha': 0.7, },
-                    fontsize=5)
-    return ax
-
-
 class EasyOCRNode(ConnectionBasedTransport):
     def __init__(self):
         super(EasyOCRNode, self).__init__()
@@ -87,6 +60,10 @@ class EasyOCRNode(ConnectionBasedTransport):
             '~classifier_name', rospy.get_name())
         self.languages = rospy.get_param(
             '~languages', ['en'])
+        self.duration = rospy.get_param('~visualize_duration', 0.1)
+        self.enable_visualization = rospy.get_param(
+            '~enable_visualization', True)
+
         self.bridge = CvBridge()
         gpu = rospy.get_param('~gpu', False)
         self.reader = easyocr.Reader(self.languages, gpu=gpu)
@@ -95,8 +72,18 @@ class EasyOCRNode(ConnectionBasedTransport):
             '~output/rects', RectArray, queue_size=1)
         self.pub_class = self.advertise(
             '~output/class', ClassificationResult, queue_size=1)
-        self.pub_image = self.advertise(
-            '~output/image', Image, queue_size=1)
+
+        if self.enable_visualization:
+            self.lock = threading.Lock()
+            self.pub_image = self.advertise(
+                '~output/image', Image, queue_size=1)
+            self.timer = rospy.Timer(
+                rospy.Duration(self.duration), self.visualize_cb)
+            self.img = None
+            self.header = None
+            self.bboxes = None
+            self.texts = None
+            self.scores = None
 
     def subscribe(self):
         self.sub_image = rospy.Subscriber(
@@ -149,26 +136,51 @@ class EasyOCRNode(ConnectionBasedTransport):
         self.pub_rects.publish(rect_msg)
         self.pub_class.publish(cls_msg)
 
-        if self.visualize:
-            fig = plt.figure(
-                tight_layout={'pad': 0})
-            ax = plt.Axes(fig, [0., 0., 1., 1.])
-            ax.axis('off')
-            fig.add_axes(ax)
-            vis_bbox(
-                img.transpose((2, 0, 1)),
-                bboxes, np.arange(len(texts)), scores,
-                label_names=texts, ax=ax)
-            fig.canvas.draw()
-            w, h = fig.canvas.get_width_height()
-            vis_img = np.fromstring(
-                fig.canvas.tostring_rgb(), dtype=np.uint8)
-            vis_img.shape = (h, w, 3)
-            fig.clf()
-            plt.close()
-            vis_msg = self.bridge.cv2_to_imgmsg(vis_img, 'rgb8')
-            vis_msg.header = msg.header
-            self.pub_image.publish(vis_msg)
+        if self.enable_visualization:
+            with self.lock:
+                self.img = img
+                self.header = msg.header
+                self.bboxes = bboxes
+                self.texts = texts
+                self.scores = scores
+
+    def visualize_cb(self, event):
+        if (not self.visualize or self.img is None
+                or self.header is None or self.bboxes is None
+                or self.texts is None or self.scores is None):
+            return
+
+        with self.lock:
+            vis_img = self.img.copy()
+            header = copy.deepcopy(self.header)
+            bboxes = self.bboxes.copy()
+            texts = self.texts.copy()
+            scores = self.scores.copy()
+
+        # bbox
+        cmap = matplotlib.cm.get_cmap('hsv')
+        n = max(len(bboxes) - 1, 10)
+        for i, (bbox, text, score) in enumerate(
+                zip(bboxes, texts, scores)):
+            rgba = np.array(cmap(1. * i / n))
+            color = rgba[:3] * 255
+            label_text = '{}, {:.2f}'.format(text, score)
+            p1y = max(bbox[0], 0)
+            p1x = max(bbox[1], 0)
+            p2y = min(bbox[2], vis_img.shape[0])
+            p2x = min(bbox[3], vis_img.shape[1])
+            cv2.rectangle(
+                vis_img, (p1x, p1y), (p2x, p2y),
+                color, thickness=3, lineType=cv2.LINE_AA)
+            cv2.putText(
+                vis_img, label_text, (p1x, max(p1y - 10, 0)),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.5, color,
+                thickness=2, lineType=cv2.LINE_AA)
+        vis_msg = self.bridge.cv2_to_imgmsg(vis_img, 'rgb8')
+        # BUG: https://answers.ros.org/question/316362/sensor_msgsimage-generates-float-instead-of-int-with-python3/  # NOQA
+        vis_msg.step = int(vis_msg.step)
+        vis_msg.header = header
+        self.pub_image.publish(vis_msg)
 
 
 if __name__ == '__main__':
