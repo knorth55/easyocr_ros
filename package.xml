@@ -1,5 +1,5 @@
 <?xml version="1.0"?>
-<package format="2">
+<package format="3">
   <name>easyocr_ros</name>
   <version>0.0.0</version>
   <description>The easyocr_ros package</description>
@@ -12,6 +12,11 @@
   <buildtool_depend>catkin</buildtool_depend>
   <buildtool_depend>python3-catkin-pkg-modules</buildtool_depend>
   <build_depend>catkin_virtualenv</build_depend>
+  <!-- for melodic -->
+  <build_depend condition="$ROS_PYTHON_VERSION == 2">cv_bridge_python3</build_depend>
+  <!-- for noetic -->
+  <build_depend condition="$ROS_PYTHON_VERSION == 3">cv_bridge</build_depend>
+
   <exec_depend>jsk_recognition_msgs</exec_depend>
   <exec_depend>jsk_topic_tools</exec_depend>
   <exec_depend>python3-rospkg-modules</exec_depend>
