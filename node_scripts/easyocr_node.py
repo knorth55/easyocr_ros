@@ -63,6 +63,58 @@ class EasyOCRNode(ConnectionBasedTransport):
         self.duration = rospy.get_param('~visualize_duration', 0.1)
         self.enable_visualization = rospy.get_param(
             '~enable_visualization', True)
+        self.decoder = rospy.get_param(
+            '~decoder', 'greedy')
+        self.beamWidth = rospy.get_param(
+            '~beamwidth', 5)
+        self.batch_size = rospy.get_param(
+            '~batch_size', 1)
+        self.workers = rospy.get_param(
+            '~workers', 0)
+        self.allowlist = rospy.get_param(
+            '~allowlist', None)
+        self.blocklist = rospy.get_param(
+            '~blocklist', None)
+        self.detail = rospy.get_param(
+            '~detail', 1)
+        self.rotation_info = rospy.get_param(
+            '~rotation_info', None)
+        self.paragraph = rospy.get_param(
+            '~paragraph', None)
+        self.min_size = rospy.get_param(
+            '~min_size', 20)
+        self.contrast_ths = rospy.get_param(
+            '~contrast_ths', 0.1)
+        self.adjust_contrast = rospy.get_param(
+            '~adjust_contrast', 0.5)
+        self.filter_ths = rospy.get_param(
+            '~filter_ths', 0.003)
+        self.text_threshold = rospy.get_param(
+            '~text_threshold', 0.7)
+        self.low_text = rospy.get_param(
+            '~low_text', 0.4)
+        self.link_threshold = rospy.get_param(
+            '~link_threshold', 0.4)
+        self.canvas_size = rospy.get_param(
+            '~canvas_size', 2560)
+        self.mag_ratio = rospy.get_param(
+            '~mag_ratio', 1.0)
+        self.slope_ths = rospy.get_param(
+            '~slope_ths', 0.1)
+        self.ycenter_ths = rospy.get_param(
+            '~ycenter_ths', 0.5)
+        self.height_ths = rospy.get_param(
+            '~height_ths', 0.5)
+        self.width_ths = rospy.get_param(
+            '~width_ths', 0.5)
+        self.y_ths = rospy.get_param(
+            '~y_ths', 0.5)
+        self.x_ths = rospy.get_param(
+            '~x_ths', 1.0)
+        self.add_margin = rospy.get_param(
+            '~add_margin', 0.1)
+        self.output_format = rospy.get_param(
+            '~output_format', 'standard')
 
         self.bridge = CvBridge()
         gpu = rospy.get_param('~gpu', False)
@@ -100,7 +152,20 @@ class EasyOCRNode(ConnectionBasedTransport):
         img = self.bridge.imgmsg_to_cv2(msg, desired_encoding='rgb8')
         # RGB -> BGR
         rospy.logdebug('start readtext')
-        results = self.reader.readtext(img[:, :, ::-1])
+        results = self.reader.readtext(
+            img[:, :, ::-1], decoder=self.decoder, beamWidth=self.beamWidth,
+            batch_size=self.batch_size, workers=self.workers,
+            allowlist=self.allowlist, blocklist=self.blocklist,
+            detail=self.detail, rotation_info=self.rotation_info,
+            paragraph=self.paragraph, min_size=self.min_size,
+            contrast_ths=self.contrast_ths,
+            adjust_contrast=self.adjust_contrast, filter_ths=self.filter_ths,
+            text_threshold=self.text_threshold, low_text=self.low_text,
+            link_threshold=self.link_threshold, canvas_size=self.canvas_size,
+            mag_ratio=self.mag_ratio, slope_ths=self.slope_ths,
+            ycenter_ths=self.ycenter_ths, height_ths=self.height_ths,
+            width_ths=self.width_ths, y_ths=self.y_ths, x_ths=self.x_ths,
+            add_margin=self.add_margin, output_format=self.output_format)
         rospy.logdebug('end readtext')
 
         bboxes = []
